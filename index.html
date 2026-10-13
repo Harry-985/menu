@@ -33,6 +33,7 @@
   header{padding:34px 4px 10px;}
   header h1{font-size:30px;margin:0;letter-spacing:1px;}
   header .sub{color:var(--muted);font-size:14px;margin:8px 0 0;}
+  header .sync{display:inline-block;font-size:11px;color:var(--muted);background:var(--card);border:1px solid var(--line);padding:2px 10px;border-radius:999px;margin-top:10px;}
 
   /* Tabs */
   .tabs{display:flex;gap:10px;background:rgba(255,255,255,.7);backdrop-filter:blur(8px);
@@ -54,7 +55,12 @@
     box-shadow:var(--shadow);cursor:pointer;border:2px solid transparent;transition:transform .12s ease,border-color .12s ease;
     display:flex;flex-direction:column;align-items:center;gap:6px;user-select:none;}
   .card:active{transform:scale(.96);}
-  .card .emoji{font-size:52px;line-height:1;}
+  .card .visual{width:100%;height:120px;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--accent-soft);}
+  .card .visual img{width:100%;height:100%;object-fit:cover;display:block;}
+  .card .visual .emoji{font-size:52px;line-height:1;}
+  .card .visual img + .emoji{display:none;}
+  .card .visual img.fail{display:none;}
+  .card .visual img.fail + .emoji{display:block;}
   .card .name{font-size:16px;font-weight:700;text-align:center;}
   .card .tags{display:flex;gap:5px;align-items:center;min-height:20px;flex-wrap:wrap;justify-content:center;}
   .card .spicy{font-size:13px;letter-spacing:-1px;}
@@ -121,6 +127,7 @@
   <header>
     <h1>今天想吃啥 🍜</h1>
     <p class="sub">点好就下单，剩下的交给他 🍳</p>
+    <span class="sync" id="syncStatus">连接中…</span>
   </header>
 
   <nav class="tabs" id="viewTabs">
@@ -159,6 +166,7 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="vendor/cloudbase.js"></script>
 <script>
 const DISHES = [
   // 家常菜
@@ -264,6 +272,31 @@ const DISHES = [
   {id:'ningboyuanzi', name:'宁波汤圆', emoji:'🍡', cat:'dessert', src:'home', spicy:0, want:false}
 ];
 
+const IMG = {
+  pizza:['misspizza','damile'],
+  pasta:['longxia','lalala'],
+  friedchicken:['kfc','zhaji'],
+  burger:['hanbao'],
+  steak:['niupai'],
+  sushi:['yihuadao','shousi'],
+  sashimi:['ciwen'],
+  eggtart:['dadanta'],
+  milktea:['naicha'],
+  mango:['yangzhiganlu'],
+  tiramisu:['tiramisu'],
+  icecream:['bingqilin'],
+  hotpot:['haidilao','huoguoj','chongqinghuoguo'],
+  crayfish:['xiaolongxia'],
+  shrimp:['baizhuoxia','longjingxia'],
+  braisedpork:['hongshaorou','dongporou','meigancai'],
+  dumpling:['xiaolongbao','zhengtangbao','caiganjiao','yujiao'],
+  crab:['pangxie','zuixie'],
+  friedrice:['danchaofan','nuomifan'],
+  spicyfish:['shuizhuyu','suancaiyu','duojiaoyutou'],
+  souffle:['shufulei'],
+  noodlesoup:['zhamian','pianerchuan','maixiatang']
+};
+
 const CATS = [
   {key:'all', label:'全部'},
   {key:'homestyle', label:'🍳 家常菜'},
@@ -274,11 +307,13 @@ const CATS = [
   {key:'dessert', label:'🧋 甜点饮品'}
 ];
 
+const CLOUDBASE_ENV = 'order-d2ghniorx967dc34a';
 const KEY = 'menu_orders_v1';
 const pad = n => String(n).padStart(2,'0');
 const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
-let orders = loadOrders();
+let orders = {};
+let db = null;
 let selected = new Set();
 let curCat = 'all';
 let view = 'order';
@@ -286,12 +321,70 @@ let calY, calM;
 let detailKey;
 
 /* ---- storage ---- */
-function loadOrders(){
+function loadLocal(){
   try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
   catch(e){ return {}; }
 }
-function saveOrders(){ try { localStorage.setItem(KEY, JSON.stringify(orders)); } catch(e){} }
+function saveLocal(){ try { localStorage.setItem(KEY, JSON.stringify(orders)); } catch(e){} }
 function todayKey(){ return dateKey(new Date()); }
+
+async function initStore(){
+  const badge = document.getElementById('syncStatus');
+  if (window.cloudbase && CLOUDBASE_ENV) {
+    try {
+      const app = window.cloudbase.init({ env: CLOUDBASE_ENV });
+      const auth = app.auth();
+      await auth.anonymousAuthProvider().signIn();
+      db = app.database();
+      const res = await db.collection('orders').limit(1000).get();
+      const map = {};
+      (res.data || []).forEach(d => { if (d.date && Array.isArray(d.items)) map[d.date] = d.items; });
+      orders = map;
+      if (badge) badge.textContent = '☁️ 云端同步';
+      return;
+    } catch(e) {
+      console.warn('云端初始化失败，已回退本地存储：', e);
+      db = null;
+    }
+  }
+  orders = loadLocal();
+  if (badge) badge.textContent = '本地存储';
+}
+
+async function saveDay(key, items){
+  if (db) {
+    try {
+      const col = db.collection('orders');
+      const q = await col.where({ date: key }).limit(1).get();
+      if (q.data && q.data.length) {
+        await col.doc(q.data[0]._id).update({ items });
+      } else {
+        await col.add({ date: key, items });
+      }
+    } catch(e) {
+      console.warn('云端保存失败：', e);
+      saveLocal();
+      toast('云端没连上，已存本机');
+    }
+  } else {
+    saveLocal();
+  }
+}
+
+async function removeDay(key){
+  if (db) {
+    try {
+      const col = db.collection('orders');
+      const q = await col.where({ date: key }).limit(20).get();
+      for (const d of (q.data || [])) await col.doc(d._id).remove();
+    } catch(e) {
+      console.warn('云端删除失败：', e);
+      saveLocal();
+    }
+  } else {
+    saveLocal();
+  }
+}
 
 /* ---- render ---- */
 const $ = s => document.querySelector(s);
@@ -317,9 +410,13 @@ function renderGrid(){
     const src = d.src==='out'
       ? '<span class="src out">🛵 出去吃</span>'
       : '<span class="src home">🏠 我做</span>';
+    const imgSlug = Object.keys(IMG).find(k => IMG[k].includes(d.id));
+    const visual = imgSlug
+      ? `<span class="visual"><img src="img/${imgSlug}.jpg" loading="lazy" alt="" onerror="this.classList.add('fail')"><span class="emoji">${d.emoji}</span></span>`
+      : `<span class="visual"><span class="emoji">${d.emoji}</span></span>`;
     card.innerHTML =
       `<span class="check">✓</span>` +
-      `<span class="emoji">${d.emoji}</span>` +
+      visual +
       `<span class="name">${d.name}</span>` +
       `<span class="tags">${src}${d.want?'<span class="want">❤️ 想吃</span>':''}${d.spicy?'<span class="spicy">'+'🌶️'.repeat(d.spicy)+'</span>':''}</span>`;
     card.onclick = () => toggle(d.id);
@@ -347,7 +444,7 @@ $('#orderBtn').onclick = () => {
   const cur = orders[key] || [];
   const merged = [...new Set([...cur, ...names])];
   orders[key] = merged;
-  saveOrders();
+  saveDay(key, merged);
   selected.clear();
   renderGrid();
   updateFab();
@@ -407,7 +504,7 @@ function renderDetail(){
      </div>`;
   box.querySelector('.copy').onclick = copyDay;
   box.querySelector('.clear').onclick = () => {
-    delete orders[detailKey]; saveOrders(); renderRecord();
+    delete orders[detailKey]; removeDay(detailKey); renderRecord();
     toast('已清空');
   };
 }
@@ -471,9 +568,11 @@ function toast(msg){
 }
 
 /* ---- init ---- */
-renderChips();
-renderGrid();
-updateFab();
+initStore().then(() => {
+  renderChips();
+  renderGrid();
+  updateFab();
+});
 </script>
 </body>
 </html>
