@@ -34,6 +34,10 @@
   header h1{font-size:30px;margin:0;letter-spacing:1px;}
   header .sub{color:var(--muted);font-size:14px;margin:8px 0 0;}
   header .sync{display:inline-block;font-size:11px;color:var(--muted);background:var(--card);border:1px solid var(--line);padding:2px 10px;border-radius:999px;margin-top:10px;}
+  header .sync.clickable{cursor:pointer;color:var(--accent);border-color:var(--accent);}
+  header .tokenBox{display:flex;gap:8px;margin-top:10px;max-width:420px;}
+  header .tokenBox input{flex:1;min-width:0;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;font-family:inherit;}
+  header .tokenBox button{border:0;background:var(--accent);color:#fff;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;}
 
   /* Tabs */
   .tabs{display:flex;gap:10px;background:rgba(255,255,255,.7);backdrop-filter:blur(8px);
@@ -128,6 +132,10 @@
     <h1>今天想吃啥 🍜</h1>
     <p class="sub">点好就下单，剩下的交给他 🍳</p>
     <span class="sync" id="syncStatus">连接中…</span>
+    <div class="tokenBox" id="tokenBox" hidden>
+      <input id="tokenInput" placeholder="粘贴 GitHub token（github_pat_ 开头）">
+      <button id="tokenSave">保存并同步</button>
+    </div>
   </header>
 
   <nav class="tabs" id="viewTabs">
@@ -166,7 +174,6 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="vendor/cloudbase.js"></script>
 <script>
 const DISHES = [
   // 家常菜
@@ -307,13 +314,13 @@ const CATS = [
   {key:'dessert', label:'🧋 甜点饮品'}
 ];
 
-const CLOUDBASE_ENV = 'order-d2ghniorx967dc34a';
 const KEY = 'menu_orders_v1';
 const pad = n => String(n).padStart(2,'0');
 const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 
 let orders = {};
-let db = null;
+let ghSha = null;
+let syncMode = 'local';
 let selected = new Set();
 let curCat = 'all';
 let view = 'order';
@@ -327,62 +334,65 @@ function loadLocal(){
 }
 function saveLocal(){ try { localStorage.setItem(KEY, JSON.stringify(orders)); } catch(e){} }
 function todayKey(){ return dateKey(new Date()); }
+function b64e(s){ return btoa(unescape(encodeURIComponent(s))); }
+function b64d(b){ return decodeURIComponent(escape(atob((b||'').replace(/\n/g,'')))); }
+
+const GH_API = 'https://api.github.com/repos/Harry-985/menu';
+function getToken(){ try { return localStorage.getItem('menu_token') || ''; } catch(e){ return ''; } }
+function ghHeaders(){
+  return { 'Authorization': 'Bearer ' + getToken(), 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' };
+}
 
 async function initStore(){
   const badge = document.getElementById('syncStatus');
-  if (window.cloudbase && CLOUDBASE_ENV) {
-    try {
-      const app = window.cloudbase.init({ env: CLOUDBASE_ENV });
-      const auth = app.auth();
-      await auth.anonymousAuthProvider().signIn();
-      db = app.database();
-      const res = await db.collection('orders').limit(1000).get();
-      const map = {};
-      (res.data || []).forEach(d => { if (d.date && Array.isArray(d.items)) map[d.date] = d.items; });
-      orders = map;
-      if (badge) badge.textContent = '☁️ 云端同步';
+  if (!getToken()) {
+    orders = loadLocal(); syncMode = 'local';
+    if (badge) { badge.textContent = '☁️ 未连接 · 点此设置'; badge.classList.add('clickable'); }
+    return;
+  }
+  try {
+    const res = await fetch(GH_API + '/contents/data.json', { headers: ghHeaders() });
+    if (res.status === 404) {
+      orders = {}; ghSha = null; syncMode = 'cloud';
+      if (badge) { badge.textContent = '☁️ 云端同步'; badge.classList.remove('clickable'); }
       return;
-    } catch(e) {
-      console.warn('云端初始化失败，已回退本地存储：', e);
-      db = null;
     }
-  }
-  orders = loadLocal();
-  if (badge) badge.textContent = '本地存储';
-}
-
-async function saveDay(key, items){
-  if (db) {
-    try {
-      const col = db.collection('orders');
-      const q = await col.where({ date: key }).limit(1).get();
-      if (q.data && q.data.length) {
-        await col.doc(q.data[0]._id).update({ items });
-      } else {
-        await col.add({ date: key, items });
-      }
-    } catch(e) {
-      console.warn('云端保存失败：', e);
-      saveLocal();
-      toast('云端没连上，已存本机');
-    }
-  } else {
-    saveLocal();
+    if (!res.ok) throw new Error('GH ' + res.status);
+    const data = await res.json();
+    ghSha = data.sha;
+    orders = JSON.parse(b64d(data.content) || '{}');
+    syncMode = 'cloud';
+    if (badge) { badge.textContent = '☁️ 云端同步'; badge.classList.remove('clickable'); }
+  } catch(e) {
+    console.warn('云端读取失败，回退本地：', e);
+    orders = loadLocal(); syncMode = 'local';
+    if (badge) { badge.textContent = '☁️ 未连接 · 点此设置'; badge.classList.add('clickable'); }
   }
 }
 
-async function removeDay(key){
-  if (db) {
-    try {
-      const col = db.collection('orders');
-      const q = await col.where({ date: key }).limit(20).get();
-      for (const d of (q.data || [])) await col.doc(d._id).remove();
-    } catch(e) {
-      console.warn('云端删除失败：', e);
-      saveLocal();
+async function saveOrders(){
+  if (syncMode !== 'cloud') { saveLocal(); return; }
+  const payload = { message: '更新点单', content: b64e(JSON.stringify(orders)) };
+  if (ghSha) payload.sha = ghSha;
+  try {
+    let res = await fetch(GH_API + '/contents/data.json', {
+      method: 'PUT', headers: ghHeaders(), body: JSON.stringify(payload)
+    });
+    if (res.status === 409) {
+      const latest = await (await fetch(GH_API + '/contents/data.json', { headers: ghHeaders() })).json();
+      ghSha = latest.sha;
+      payload.sha = ghSha;
+      res = await fetch(GH_API + '/contents/data.json', {
+        method: 'PUT', headers: ghHeaders(), body: JSON.stringify(payload)
+      });
     }
-  } else {
+    if (!res.ok) throw new Error('GH ' + res.status);
+    const out = await res.json();
+    if (out.content && out.content.sha) ghSha = out.content.sha;
+  } catch(e) {
+    console.warn('云端保存失败：', e);
     saveLocal();
+    toast('云端保存失败，已存本机');
   }
 }
 
@@ -444,7 +454,7 @@ $('#orderBtn').onclick = () => {
   const cur = orders[key] || [];
   const merged = [...new Set([...cur, ...names])];
   orders[key] = merged;
-  saveDay(key, merged);
+  saveOrders();
   selected.clear();
   renderGrid();
   updateFab();
@@ -504,7 +514,7 @@ function renderDetail(){
      </div>`;
   box.querySelector('.copy').onclick = copyDay;
   box.querySelector('.clear').onclick = () => {
-    delete orders[detailKey]; removeDay(detailKey); renderRecord();
+    delete orders[detailKey]; saveOrders(); renderRecord();
     toast('已清空');
   };
 }
@@ -566,6 +576,20 @@ function toast(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
 }
+
+/* ---- cloud token setup ---- */
+(function(){
+  const badge = document.getElementById('syncStatus');
+  const box = document.getElementById('tokenBox');
+  if (badge) badge.onclick = () => { if (box) box.hidden = !box.hidden; };
+  const save = document.getElementById('tokenSave');
+  if (save) save.onclick = () => {
+    const v = document.getElementById('tokenInput').value.trim();
+    if (!v) { toast('先粘贴 token'); return; }
+    try { localStorage.setItem('menu_token', v); } catch(e){}
+    location.reload();
+  };
+})();
 
 /* ---- init ---- */
 initStore().then(() => {
