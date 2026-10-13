@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>今天想吃啥 🍜</title>
+<style>
+  :root{
+    --bg:#FBF3E8;
+    --card:#FFFFFF;
+    --ink:#3F332B;
+    --muted:#A08F82;
+    --accent:#E85D3F;
+    --accent-soft:#FDE4DA;
+    --pink:#EF7C8B;
+    --pink-soft:#FBE4E7;
+    --green:#57A868;
+    --line:#F0E3D4;
+    --radius:20px;
+    --shadow:0 8px 24px rgba(184,132,92,.12);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 18px 140px;}
+
+  /* Header */
+  header{padding:34px 4px 10px;}
+  header h1{font-size:30px;margin:0;letter-spacing:1px;}
+  header .sub{color:var(--muted);font-size:14px;margin:8px 0 0;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:10px;background:rgba(255,255,255,.7);backdrop-filter:blur(8px);
+    padding:6px;border-radius:999px;position:sticky;top:12px;z-index:20;box-shadow:var(--shadow);}
+  .tab{flex:1;border:0;background:transparent;color:var(--muted);font-size:15px;font-weight:600;
+    padding:10px 0;border-radius:999px;cursor:pointer;font-family:inherit;}
+  .tab.active{background:var(--ink);color:#FFF9F2;}
+
+  /* Category chips */
+  .chips{display:flex;gap:9px;overflow-x:auto;padding:18px 0 4px;scrollbar-width:none;}
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--ink);
+    padding:8px 15px;border-radius:999px;font-size:14px;cursor:pointer;font-family:inherit;font-weight:600;}
+  .chip.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  /* Dish grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding-top:14px;}
+  .card{position:relative;background:var(--card);border-radius:var(--radius);padding:20px 14px 16px;
+    box-shadow:var(--shadow);cursor:pointer;border:2px solid transparent;transition:transform .12s ease,border-color .12s ease;
+    display:flex;flex-direction:column;align-items:center;gap:6px;user-select:none;}
+  .card:active{transform:scale(.96);}
+  .card .emoji{font-size:52px;line-height:1;}
+  .card .name{font-size:16px;font-weight:700;text-align:center;}
+  .card .tags{display:flex;gap:5px;align-items:center;min-height:20px;flex-wrap:wrap;justify-content:center;}
+  .card .spicy{font-size:13px;letter-spacing:-1px;}
+  .card .want{background:var(--pink-soft);color:var(--pink);font-size:11px;font-weight:700;
+    padding:2px 8px;border-radius:999px;}
+  .card .src{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;}
+  .card .src.home{background:#EAF3E4;color:var(--green);}
+  .card .src.out{background:#FDEBD2;color:#C98A2D;}
+  .card .check{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:50%;
+    background:var(--accent);color:#fff;display:none;align-items:center;justify-content:center;
+    font-size:15px;font-weight:700;box-shadow:0 3px 8px rgba(232,93,63,.4);}
+  .card.sel{border-color:var(--accent);background:var(--accent-soft);}
+  .card.sel .check{display:flex;}
+
+  /* Record / calendar */
+  .streak{background:var(--card);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);
+    margin-top:18px;font-size:15px;font-weight:600;color:var(--ink);}
+  .streak b{color:var(--accent);}
+  .cal-card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-top:14px;}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cal-head .ttl{font-size:16px;font-weight:700;}
+  .cal-head button{border:0;background:var(--accent-soft);color:var(--accent);width:34px;height:34px;
+    border-radius:50%;font-size:20px;cursor:pointer;line-height:1;}
+  .cal-week,.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+  .cal-week span{text-align:center;font-size:12px;color:var(--muted);padding:4px 0;}
+  .cal-cell{position:relative;aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+    border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);}
+  .cal-cell.has{background:var(--accent-soft);color:var(--accent);}
+  .cal-cell.has::after{content:"";position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--accent);}
+  .cal-cell.today{box-shadow:inset 0 0 0 2px var(--accent);}
+  .cal-cell.empty{cursor:default;}
+
+  .detail{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-top:14px;}
+  .detail .dt{font-size:15px;font-weight:700;margin:0 0 8px;}
+  .detail .muted{color:var(--muted);font-size:14px;}
+  .detail .items{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+  .detail .item{background:var(--accent-soft);color:var(--accent);padding:5px 12px;border-radius:999px;font-size:14px;font-weight:600;}
+  .detail .row{display:flex;gap:10px;margin-top:12px;}
+  .detail .btn{flex:1;border:0;padding:12px;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .detail .btn.copy{background:var(--accent);color:#fff;}
+  .detail .btn.clear{background:var(--line);color:var(--muted);}
+
+  /* Bottom action bar */
+  .fab{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:560px;
+    padding:14px 18px calc(14px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:12px;z-index:30;}
+  .fab .box{flex:1;display:flex;align-items:center;justify-content:space-between;background:var(--ink);
+    color:#FFF9F2;border-radius:999px;padding:14px 22px;box-shadow:0 10px 30px rgba(0,0,0,.18);}
+  .fab .box .cnt{font-size:15px;}
+  .fab .box .cnt b{color:#FFB98A;}
+  .fab .order{flex:0 0 auto;border:0;background:var(--accent);color:#fff;font-size:16px;font-weight:700;
+    padding:14px 22px;border-radius:999px;cursor:pointer;font-family:inherit;box-shadow:0 10px 30px rgba(232,93,63,.35);}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:var(--ink);
+    color:#fff;padding:11px 20px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;
+    transition:all .25s ease;z-index:50;white-space:nowrap;max-width:86vw;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  [hidden]{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>今天想吃啥 🍜</h1>
+    <p class="sub">点好就下单，剩下的交给他 🍳</p>
+  </header>
+
+  <nav class="tabs" id="viewTabs">
+    <button class="tab active" data-view="order">🍽️ 点菜</button>
+    <button class="tab" data-view="record">📅 打卡</button>
+  </nav>
+
+  <main>
+    <section id="orderView" class="view">
+      <div class="chips" id="chips"></div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section id="recordView" class="view" hidden>
+      <div class="streak" id="streak"></div>
+      <div class="cal-card">
+        <div class="cal-head">
+          <button id="prevMonth">‹</button>
+          <div class="ttl" id="calTitle"></div>
+          <button id="nextMonth">›</button>
+        </div>
+        <div class="cal-week">
+          <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+      </div>
+      <div class="detail" id="detail"></div>
+    </section>
+  </main>
+</div>
+
+<div class="fab" id="fab" hidden>
+  <div class="box"><span class="cnt">已选 <b id="selCount">0</b> 样</span></div>
+  <button class="order" id="orderBtn">下单 ✓</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const DISHES = [
+  // 家常菜
+  {id:'culiubaicai', name:'醋溜白菜', emoji:'🥬', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'gongjin', name:'公瑾爆蛋', emoji:'🍳', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'fanqiechao', name:'番茄炒蛋', emoji:'🍅', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'hongshaorou', name:'红烧肉', emoji:'🥩', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'tangculiji', name:'糖醋里脊', emoji:'🍖', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'kelejichi', name:'可乐鸡翅', emoji:'🍗', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'qingjiaochao', name:'青椒炒肉', emoji:'🫑', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'shousibaocai', name:'手撕包菜', emoji:'🥬', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'danchaofan', name:'蛋炒饭', emoji:'🍚', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'fanqieniunan', name:'番茄牛腩', emoji:'🍅', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'galijifan', name:'咖喱鸡饭', emoji:'🍛', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'zhengdangeng', name:'蒸蛋羹', emoji:'🥚', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'baizhuoxia', name:'白灼虾', emoji:'🦐', cat:'homestyle', src:'home', spicy:0, want:false},
+  {id:'qingzhengluyu', name:'清蒸鲈鱼', emoji:'🐟', cat:'homestyle', src:'home', spicy:0, want:false},
+
+  // 江浙味
+  {id:'zhamian', name:'榨面', emoji:'🍜', cat:'local', src:'home', spicy:0, want:true},
+  {id:'caiganjiao', name:'菜干饺', emoji:'🥟', cat:'local', src:'home', spicy:0, want:true},
+  {id:'caiganbing', name:'菜干饼', emoji:'🫓', cat:'local', src:'home', spicy:0, want:true},
+  {id:'zhengtangbao', name:'蒸汤包', emoji:'🥟', cat:'local', src:'home', spicy:0, want:true},
+  {id:'xiaolongbao', name:'小笼包', emoji:'🥟', cat:'local', src:'out', spicy:0, want:true},
+  {id:'youdunguo', name:'油墩果', emoji:'🍥', cat:'local', src:'out', spicy:0, want:true},
+  {id:'nuomifan', name:'糯米饭', emoji:'🍚', cat:'local', src:'out', spicy:0, want:true},
+  {id:'chaoniangao', name:'炒年糕', emoji:'🥘', cat:'local', src:'home', spicy:0, want:true},
+  {id:'kaoniangao', name:'烤年糕', emoji:'🍢', cat:'local', src:'home', spicy:0, want:true},
+  {id:'kaopian', name:'烤片年糕', emoji:'🍢', cat:'local', src:'home', spicy:0, want:true},
+  {id:'pangxie', name:'螃蟹炒年糕', emoji:'🦀', cat:'local', src:'home', spicy:0, want:true},
+  {id:'yanggutou', name:'羊骨头', emoji:'🍖', cat:'local', src:'out', spicy:0, want:true},
+  {id:'doufuniangao', name:'豆腐年糕', emoji:'🍲', cat:'local', src:'home', spicy:0, want:false},
+  {id:'jidanjiujiao', name:'鸡蛋烤饺', emoji:'🥟', cat:'local', src:'home', spicy:0, want:false},
+  {id:'meigancai', name:'霉干菜扣肉', emoji:'🥘', cat:'local', src:'home', spicy:0, want:false},
+  {id:'chongrendunya', name:'崇仁炖鸭', emoji:'🦆', cat:'local', src:'out', spicy:0, want:false},
+  {id:'zaoji', name:'糟鸡', emoji:'🍗', cat:'local', src:'out', spicy:0, want:false},
+  {id:'zuixie', name:'黄酒醉蟹', emoji:'🦀', cat:'local', src:'out', spicy:0, want:false},
+  {id:'choudoufu', name:'绍兴臭豆腐', emoji:'🍢', cat:'local', src:'out', spicy:0, want:false},
+  {id:'huixiangdou', name:'茴香豆', emoji:'🫘', cat:'local', src:'out', spicy:0, want:false},
+  {id:'jiangya', name:'酱鸭', emoji:'🦆', cat:'local', src:'out', spicy:0, want:false},
+  {id:'youmensun', name:'油焖笋', emoji:'🎍', cat:'local', src:'home', spicy:0, want:false},
+  {id:'maihushao', name:'麦糊烧', emoji:'🥞', cat:'local', src:'home', spicy:0, want:false},
+  {id:'maixiatang', name:'麦虾汤', emoji:'🍜', cat:'local', src:'out', spicy:0, want:false},
+  {id:'yujiao', name:'芋饺', emoji:'🥟', cat:'local', src:'home', spicy:0, want:false},
+  {id:'pianerchuan', name:'片儿川', emoji:'🍜', cat:'local', src:'home', spicy:0, want:false},
+  {id:'xihucuyu', name:'西湖醋鱼', emoji:'🐟', cat:'local', src:'home', spicy:0, want:false},
+  {id:'dongporou', name:'东坡肉', emoji:'🥩', cat:'local', src:'home', spicy:0, want:false},
+  {id:'longjingxia', name:'龙井虾仁', emoji:'🦐', cat:'local', src:'home', spicy:0, want:false},
+  {id:'songsao', name:'宋嫂鱼羹', emoji:'🍲', cat:'local', src:'home', spicy:0, want:false},
+  {id:'jiaohuaji', name:'叫花鸡', emoji:'🍗', cat:'local', src:'home', spicy:0, want:false},
+
+  // 川湘辣
+  {id:'layatou', name:'辣鸭头', emoji:'🦆', cat:'spicy', src:'out', spicy:2, want:true},
+  {id:'shuizhuyu', name:'水煮鱼', emoji:'🐟', cat:'spicy', src:'out', spicy:3, want:false},
+  {id:'suancaiyu', name:'酸菜鱼', emoji:'🐟', cat:'spicy', src:'out', spicy:2, want:false},
+  {id:'malaxiangguo', name:'麻辣香锅', emoji:'🥘', cat:'spicy', src:'out', spicy:3, want:false},
+  {id:'maoxuewang', name:'毛血旺', emoji:'🥘', cat:'spicy', src:'out', spicy:3, want:false},
+  {id:'xiaolongxia', name:'小龙虾', emoji:'🦞', cat:'spicy', src:'out', spicy:2, want:false},
+  {id:'laziji', name:'辣子鸡', emoji:'🍗', cat:'spicy', src:'out', spicy:3, want:false},
+  {id:'duojiaoyutou', name:'剁椒鱼头', emoji:'🐟', cat:'spicy', src:'out', spicy:3, want:false},
+  {id:'mapodoufu', name:'麻婆豆腐', emoji:'🍲', cat:'spicy', src:'home', spicy:2, want:false},
+  {id:'luosifen', name:'螺蛳粉', emoji:'🍜', cat:'spicy', src:'out', spicy:2, want:false},
+  {id:'malatang', name:'麻辣烫', emoji:'🍲', cat:'spicy', src:'out', spicy:2, want:false},
+  {id:'maocai', name:'冒菜', emoji:'🥘', cat:'spicy', src:'out', spicy:2, want:false},
+  {id:'shaokao', name:'烧烤', emoji:'🍢', cat:'spicy', src:'out', spicy:1, want:false},
+  {id:'chongqingxiaomian', name:'重庆小面', emoji:'🍜', cat:'spicy', src:'out', spicy:2, want:false},
+  {id:'ganguohuacai', name:'干锅花菜', emoji:'🥦', cat:'spicy', src:'home', spicy:1, want:false},
+
+  // 火锅
+  {id:'haidilao', name:'海底捞', emoji:'🍲', cat:'hotpot', src:'out', spicy:0, want:false},
+  {id:'huoguoj', name:'火锅鸡', emoji:'🍲', cat:'hotpot', src:'home', spicy:1, want:false},
+  {id:'chongqinghuoguo', name:'重庆老火锅', emoji:'🍲', cat:'hotpot', src:'out', spicy:3, want:false},
+  {id:'yuzifudai', name:'鱼籽福袋', emoji:'🥟', cat:'hotpot', src:'home', spicy:0, want:false},
+  {id:'xiangling', name:'响铃卷', emoji:'🥐', cat:'hotpot', src:'home', spicy:0, want:false},
+  {id:'xiahu', name:'虾滑', emoji:'🍤', cat:'hotpot', src:'home', spicy:0, want:false},
+  {id:'maodu', name:'毛肚', emoji:'🥩', cat:'hotpot', src:'home', spicy:0, want:false},
+  {id:'feiniu', name:'肥牛', emoji:'🥩', cat:'hotpot', src:'home', spicy:0, want:false},
+
+  // 披萨西餐
+  {id:'misspizza', name:'miss pizza', emoji:'🍕', cat:'west', src:'out', spicy:0, want:true},
+  {id:'damile', name:'达美乐', emoji:'🍕', cat:'west', src:'out', spicy:0, want:false},
+  {id:'kfc', name:'KFC鸡块', emoji:'🍗', cat:'west', src:'out', spicy:0, want:false},
+  {id:'longxia', name:'龙虾意面', emoji:'🍝', cat:'west', src:'out', spicy:0, want:false},
+  {id:'lalala', name:'辣辣辣海鲜意面', emoji:'🍝', cat:'west', src:'out', spicy:3, want:false},
+  {id:'yihuadao', name:'一花道·寿司', emoji:'🍣', cat:'west', src:'out', spicy:0, want:false},
+  {id:'niupai', name:'牛排', emoji:'🥩', cat:'west', src:'out', spicy:0, want:false},
+  {id:'hanbao', name:'汉堡', emoji:'🍔', cat:'west', src:'out', spicy:0, want:false},
+  {id:'zhaji', name:'炸鸡', emoji:'🍗', cat:'west', src:'out', spicy:0, want:false},
+  {id:'shousi', name:'寿司', emoji:'🍣', cat:'west', src:'out', spicy:0, want:false},
+  {id:'ciwen', name:'三文鱼刺身', emoji:'🍣', cat:'west', src:'out', spicy:0, want:false},
+
+  // 甜点饮品
+  {id:'dadanta', name:'大蛋挞', emoji:'🥧', cat:'dessert', src:'out', spicy:0, want:false},
+  {id:'naicha', name:'奶茶', emoji:'🧋', cat:'dessert', src:'out', spicy:0, want:false},
+  {id:'yangzhiganlu', name:'杨枝甘露', emoji:'🥭', cat:'dessert', src:'out', spicy:0, want:false},
+  {id:'shuangpinai', name:'双皮奶', emoji:'🍮', cat:'dessert', src:'out', spicy:0, want:false},
+  {id:'shufulei', name:'舒芙蕾', emoji:'🍰', cat:'dessert', src:'out', spicy:0, want:false},
+  {id:'tiramisu', name:'提拉米苏', emoji:'🍰', cat:'dessert', src:'out', spicy:0, want:false},
+  {id:'naiyouxiaopan', name:'奶油小攀', emoji:'🥧', cat:'dessert', src:'out', spicy:0, want:false},
+  {id:'jiuniangyuanzi', name:'酒酿圆子', emoji:'🍡', cat:'dessert', src:'home', spicy:0, want:false},
+  {id:'bingqilin', name:'冰淇淋', emoji:'🍦', cat:'dessert', src:'out', spicy:0, want:false},
+  {id:'aicaomaci', name:'艾草麻糍', emoji:'🍡', cat:'dessert', src:'home', spicy:0, want:false},
+  {id:'ningboyuanzi', name:'宁波汤圆', emoji:'🍡', cat:'dessert', src:'home', spicy:0, want:false}
+];
+
+const CATS = [
+  {key:'all', label:'全部'},
+  {key:'homestyle', label:'🍳 家常菜'},
+  {key:'local', label:'🥢 江浙味'},
+  {key:'spicy', label:'🌶️ 川湘辣'},
+  {key:'hotpot', label:'🍲 火锅'},
+  {key:'west', label:'🍕 披萨西餐'},
+  {key:'dessert', label:'🧋 甜点饮品'}
+];
+
+const KEY = 'menu_orders_v1';
+const pad = n => String(n).padStart(2,'0');
+const dateKey = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+let orders = loadOrders();
+let selected = new Set();
+let curCat = 'all';
+let view = 'order';
+let calY, calM;
+let detailKey;
+
+/* ---- storage ---- */
+function loadOrders(){
+  try { return JSON.parse(localStorage.getItem(KEY)) || {}; }
+  catch(e){ return {}; }
+}
+function saveOrders(){ try { localStorage.setItem(KEY, JSON.stringify(orders)); } catch(e){} }
+function todayKey(){ return dateKey(new Date()); }
+
+/* ---- render ---- */
+const $ = s => document.querySelector(s);
+const grid = $('#grid'), chips = $('#chips'), fab = $('#fab'), selCount = $('#selCount');
+
+function renderChips(){
+  chips.innerHTML = '';
+  CATS.forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (c.key===curCat?' active':'');
+    b.textContent = c.label;
+    b.onclick = () => { curCat = c.key; renderChips(); renderGrid(); };
+    chips.appendChild(b);
+  });
+}
+
+function renderGrid(){
+  grid.innerHTML = '';
+  const list = DISHES.filter(d => curCat==='all' || d.cat===curCat);
+  list.forEach(d => {
+    const card = document.createElement('div');
+    card.className = 'card' + (selected.has(d.id)?' sel':'');
+    const src = d.src==='out'
+      ? '<span class="src out">🛵 出去吃</span>'
+      : '<span class="src home">🏠 我做</span>';
+    card.innerHTML =
+      `<span class="check">✓</span>` +
+      `<span class="emoji">${d.emoji}</span>` +
+      `<span class="name">${d.name}</span>` +
+      `<span class="tags">${src}${d.want?'<span class="want">❤️ 想吃</span>':''}${d.spicy?'<span class="spicy">'+'🌶️'.repeat(d.spicy)+'</span>':''}</span>`;
+    card.onclick = () => toggle(d.id);
+    grid.appendChild(card);
+  });
+}
+
+function toggle(id){
+  selected.has(id) ? selected.delete(id) : selected.add(id);
+  renderGrid();
+  updateFab();
+}
+
+function updateFab(){
+  const n = selected.size;
+  fab.hidden = n === 0;
+  selCount.textContent = n;
+}
+
+/* ---- order ---- */
+$('#orderBtn').onclick = () => {
+  if(!selected.size) return toast('先点点儿想吃的呀 🥢');
+  const names = [...selected].map(id => DISHES.find(d=>d.id===id).name);
+  const key = todayKey();
+  const cur = orders[key] || [];
+  const merged = [...new Set([...cur, ...names])];
+  orders[key] = merged;
+  saveOrders();
+  selected.clear();
+  renderGrid();
+  updateFab();
+  toast('今日点单已记录 💌');
+  switchView('record');
+  detailKey = key;
+  renderRecord();
+};
+
+/* ---- calendar ---- */
+function renderRecord(){
+  renderStreak();
+  renderCalendar();
+  renderDetail();
+}
+
+function renderStreak(){
+  let n = 0;
+  const d = new Date();
+  if(!orders[dateKey(d)]) d.setDate(d.getDate()-1);
+  while(orders[dateKey(d)]){ n++; d.setDate(d.getDate()-1); }
+  $('#streak').innerHTML = n>0
+    ? `🔥 已连续打卡 <b>${n}</b> 天`
+    : '今天还没点单，快来点第一顿吧 🍽️';
+}
+
+function renderCalendar(){
+  $('#calTitle').textContent = `${calY}年${calM+1}月`;
+  const first = new Date(calY, calM, 1).getDay();
+  const days = new Date(calY, calM+1, 0).getDate();
+  const g = $('#calGrid');
+  g.innerHTML = '';
+  for(let i=0;i<first;i++){ const c=document.createElement('div'); c.className='cal-cell empty'; g.appendChild(c); }
+  for(let d=1; d<=days; d++){
+    const key = dateKey(new Date(calY, calM, d));
+    const cell = document.createElement('div');
+    cell.className = 'cal-cell' + (orders[key]?' has':'') + (key===todayKey()?' today':'');
+    cell.textContent = d;
+    cell.onclick = () => { detailKey = key; renderDetail(); };
+    g.appendChild(cell);
+  }
+}
+
+function renderDetail(){
+  const box = $('#detail');
+  const items = orders[detailKey] || [];
+  if(!detailKey || !items.length){
+    box.innerHTML = `<p class="dt">${fmtDate(detailKey)}</p><p class="muted">这天还没点单哦</p>`;
+    return;
+  }
+  box.innerHTML =
+    `<p class="dt">${fmtDate(detailKey)} 想吃</p>` +
+    `<div class="items">${items.map(i=>`<span class="item">${i}</span>`).join('')}</div>` +
+    `<div class="row">
+       <button class="btn copy">复制发给他</button>
+       <button class="btn clear">清空这天</button>
+     </div>`;
+  box.querySelector('.copy').onclick = copyDay;
+  box.querySelector('.clear').onclick = () => {
+    delete orders[detailKey]; saveOrders(); renderRecord();
+    toast('已清空');
+  };
+}
+
+function fmtDate(key){
+  if(!key) return '';
+  const [y,m,d] = key.split('-');
+  return `${Number(m)}月${Number(d)}日`;
+}
+
+function copyDay(){
+  const items = orders[detailKey] || [];
+  if(!items.length) return toast('这天还没点单哦');
+  const text = `${fmtDate(detailKey)}，我想吃：${items.join('、')} 💕`;
+  copyText(text);
+}
+
+function copyText(text){
+  const done = () => toast('已复制，去发给他吧 💌');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text,done);
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); done(); } catch(e){ toast('复制失败，长按文字手动复制吧'); }
+  document.body.removeChild(ta);
+}
+
+/* ---- view switch ---- */
+function switchView(v){
+  view = v;
+  $('#orderView').hidden = v!=='order';
+  $('#recordView').hidden = v!=='record';
+  fab.hidden = v!=='order' ? true : (selected.size===0);
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view===v));
+}
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  if(t.dataset.view==='record'){
+    const now = new Date();
+    calY = now.getFullYear(); calM = now.getMonth();
+    detailKey = todayKey();
+  }
+  switchView(t.dataset.view);
+  if(t.dataset.view==='record') renderRecord();
+});
+
+$('#prevMonth').onclick = () => { calM--; if(calM<0){calM=11;calY--;} renderCalendar(); };
+$('#nextMonth').onclick = () => { calM++; if(calM>11){calM=0;calY++;} renderCalendar(); };
+
+/* ---- toast ---- */
+let toastTimer;
+function toast(msg){
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---- init ---- */
+renderChips();
+renderGrid();
+updateFab();
+</script>
+</body>
+</html>
