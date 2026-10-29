@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121614" media="(prefers-color-scheme: dark)">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>裘女士控制台</title>
+<style>
+:root{
+  /* 版式：单栏终端，纸面底 + 墨绿强调，衬线标题配无衬线正文 */
+  --bg:#f5f6f3;
+  --surface:#fffefb;
+  --ink:#1b211d;
+  --muted:#6c756e;
+  --line:#dcdcd4;
+  --accent:#2f6b52;
+  --accent-ink:#ffffff;
+  --soft:#e7efe9;
+  --rail:#c9cec7;
+  --serif:"Source Han Serif SC","Noto Serif SC","Songti SC",STSong,"SimSun",serif;
+  --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121614;--surface:#1a1f1c;--ink:#e9ece7;--muted:#96a099;
+    --line:#2b332e;--accent:#7cc3a0;--accent-ink:#0b120e;--soft:#1d2822;--rail:#39423b;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121614;--surface:#1a1f1c;--ink:#e9ece7;--muted:#96a099;
+  --line:#2b332e;--accent:#7cc3a0;--accent-ink:#0b120e;--soft:#1d2822;--rail:#39423b;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.75;
+  padding-left:max(18px,env(safe-area-inset-left,0px));
+  padding-right:max(18px,env(safe-area-inset-right,0px));
+  padding-block:max(32px,env(safe-area-inset-top,0px)) max(48px,env(safe-area-inset-bottom,0px));
+  -webkit-font-smoothing:antialiased;
+  -webkit-text-size-adjust:100%;
+}
+.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+
+header{display:flex;flex-direction:column;gap:10px;padding-bottom:4px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+h1{
+  font-family:var(--serif);
+  font-size:clamp(30px,7vw,42px);
+  line-height:1.15;
+  font-weight:600;
+  letter-spacing:.01em;
+  margin:0;
+  text-wrap:balance;
+}
+.sub{margin:0;color:var(--muted);font-size:14.5px}
+
+.stats{display:flex;flex-wrap:wrap;gap:28px;margin-top:14px;padding-top:16px;border-top:1px solid var(--line)}
+.stat{display:flex;flex-direction:column;gap:2px;min-width:0}
+.num{font-family:var(--serif);font-size:32px;line-height:1.1;font-variant-numeric:tabular-nums}
+.lab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted)}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:22px 20px;
+  min-width:0;
+}
+.card h2{
+  font-family:var(--serif);
+  font-size:19px;
+  font-weight:600;
+  margin:0 0 4px;
+  letter-spacing:.01em;
+}
+.cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.cardhead h2{margin:0}
+.badge{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
+  color:var(--muted);background:transparent;
+  border:1px solid var(--line);border-radius:99px;
+  padding:3px 10px;cursor:pointer;white-space:nowrap;
+}
+.badge.on{color:var(--accent);border-color:var(--accent)}
+.desc{margin:0 0 16px;color:var(--muted);font-size:13.5px;line-height:1.6}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-top:18px}
+.cell{background:var(--surface);padding:14px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.cell .v{font-family:var(--serif);font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums}
+.cell .k{font-size:12px;color:var(--muted);line-height:1.4}
+.note{margin:14px 0 0;font-size:13.5px;line-height:1.8;color:var(--ink)}
+.note .hl{background:var(--soft);padding:0 3px;border-radius:2px}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 18px}
+.chip{
+  font-family:var(--sans);
+  font-size:14px;
+  color:var(--ink);
+  background:transparent;
+  border:1px solid var(--rail);
+  border-radius:3px;
+  padding:7px 15px;
+  cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip:focus-visible,.entry button:focus-visible,input:focus-visible,.quizbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.response{
+  border-left:2px solid var(--accent);
+  padding:2px 0 2px 16px;
+  min-height:96px;
+  display:flex;
+  align-items:center;
+}
+.response p{margin:0;font-family:var(--serif);font-size:16.5px;line-height:1.9}
+.response .hint{font-family:var(--sans);color:var(--muted);font-size:14px;line-height:1.7}
+.fade{animation:fade .28s ease-out}
+@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.fade{animation:none}}
+
+.entry{display:flex;gap:8px;margin-top:4px}
+.entry input{
+  flex:1;min-width:0;
+  font-family:var(--sans);font-size:14.5px;
+  color:var(--ink);background:var(--bg);
+  border:1px solid var(--rail);border-radius:3px;
+  padding:9px 12px;
+}
+.entry input::placeholder{color:var(--muted)}
+.entry button{
+  font-family:var(--sans);font-size:14px;
+  color:var(--accent-ink);background:var(--accent);
+  border:1px solid var(--accent);border-radius:3px;
+  padding:9px 18px;cursor:pointer;white-space:nowrap;
+}
+.entry button:active{transform:translateY(1px)}
+
+.log{margin-top:18px;display:flex;flex-direction:column;gap:0}
+.row{display:flex;gap:14px;padding:10px 0;border-top:1px solid var(--line);font-size:14px;min-width:0}
+.row:first-child{border-top:none}
+.row .when{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap;padding-top:3px;font-variant-numeric:tabular-nums}
+.row .what{min-width:0;overflow-wrap:anywhere}
+.empty{font-size:13.5px;color:var(--muted);padding-top:6px}
+.count{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:12px;letter-spacing:.04em}
+
+.quiz .q{margin-top:18px}
+.qtext{font-size:15px;margin:0 0 8px;font-weight:500}
+.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opt{
+  font-size:13.5px;font-family:var(--sans);
+  background:transparent;color:var(--ink);
+  border:1px solid var(--rail);border-radius:3px;
+  padding:6px 12px;cursor:pointer;text-align:left;
+}
+.opt:hover{border-color:var(--accent);color:var(--accent)}
+.opt[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent)}
+.verdict{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.verdict h3{font-family:var(--serif);font-size:17px;margin:0 0 6px}
+.verdict p{margin:0;font-size:14.5px;color:var(--ink)}
+.again{margin-top:14px;background:none;border:none;color:var(--muted);font-size:12.5px;font-family:var(--mono);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+.day100{border-style:dashed}
+.lockrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pill{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+.letter p{font-family:var(--serif);font-size:16.5px;line-height:2;margin:0 0 14px}
+.letter p:last-child{margin-bottom:0}
+.sign{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em;margin-top:18px}
+
+footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:6px;color:var(--muted)}
+.frog{width:38px;height:38px;flex:none}
+.ver{font-family:var(--mono);font-size:11px;letter-spacing:.1em;background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 0}
+.egg{margin-top:10px;font-family:var(--serif);font-size:15px;color:var(--ink);line-height:1.9;border-top:1px solid var(--line);padding-top:12px}
+[hidden]{display:none !important}
+
+@media (max-width:420px){
+  .stats{gap:20px}
+  .grid{grid-template-columns:repeat(2,1fr)}
+  .entry{flex-wrap:wrap}
+  .entry button{flex:1}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="kicker">私人终端 · 一位用户</div>
+    <h1>裘女士控制台</h1>
+    <p class="sub">这里不放鸡汤。放点你用得上的东西。</p>
+    <div class="stats">
+      <div class="stat"><span class="num" id="dayNum">52</span><span class="lab">在一起第几天</span></div>
+      <div class="stat"><span class="num" id="leftNum">48</span><span class="lab">距第 100 天</span></div>
+    </div>
+  </header>
+
+  <section class="card">
+    <h2>你的一些数据</h2>
+    <p class="desc">9 月 14 日到 10 月 29 日，我们聊了这些。</p>
+    <div class="grid">
+      <div class="cell"><span class="v">18,860</span><span class="k">条消息</span></div>
+      <div class="cell"><span class="v">9,875</span><span class="k">条是你发的</span></div>
+      <div class="cell"><span class="v">7.4</span><span class="k">字，平均每条</span></div>
+      <div class="cell"><span class="v">168</span><span class="k">次「笑死」</span></div>
+      <div class="cell"><span class="v">369</span><span class="k">次叫我宝宝</span></div>
+      <div class="cell"><span class="v">34 : 22</span><span class="k">你先开口的次数</span></div>
+    </div>
+    <p class="note">46 天里，有 <span class="hl">41 天</span>你过了 0 点还在发消息。0 点是你一天里最忙的时候，比上课时间还忙。这个我记着，不是为了管你。</p>
+  </section>
+
+  <section class="card">
+    <h2>现在是什么状态</h2>
+    <p class="desc">选一个。每次点，给你的都不一样。</p>
+    <div class="chips" id="stateChips"></div>
+    <div class="response" id="response">
+      <p class="hint">你不需要先解释发生了什么。选个状态就行。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="cardhead">
+      <h2>成果登记处</h2>
+      <button class="badge" id="syncBadge" type="button">仅本机</button>
+    </div>
+    <p class="desc">你嘴上说自己懒。这里只记事实。</p>
+    <div class="chips" id="presetChips"></div>
+    <form class="entry" id="entryForm">
+      <input id="entryInput" type="text" maxlength="60" placeholder="或者自己写一句" autocomplete="off" aria-label="记录一件事">
+      <button type="submit">记一笔</button>
+    </form>
+    <form class="entry" id="tokenForm" hidden>
+      <input id="tokenInput" type="password" placeholder="粘贴 GitHub token（github_pat_ 开头）" autocomplete="off" aria-label="GitHub token">
+      <button type="submit">连接</button>
+    </form>
+    <div class="log" id="log"></div>
+    <div class="count" id="count"></div>
+  </section>
+
+  <section class="card quiz">
+    <h2>测一下：你今天的懒是哪一种</h2>
+    <p class="desc">三道题。答完出结论，结论不一定好听。</p>
+    <div id="quiz"></div>
+    <div class="verdict" id="verdict" hidden></div>
+    <button class="again" id="again" type="button" hidden>重新测一次</button>
+  </section>
+
+  <section class="card day100" id="day100Card">
+    <div class="lockrow">
+      <h2>第 100 天</h2>
+      <span class="pill" id="lockPill">未解锁</span>
+    </div>
+    <div id="day100Body"></div>
+  </section>
+
+  <footer>
+    <svg class="frog" viewBox="0 0 64 64" aria-hidden="true">
+      <ellipse cx="32" cy="40" rx="20" ry="17" fill="#dfe9c6"/>
+      <circle cx="21" cy="22" r="9" fill="#eef3e2"/>
+      <circle cx="43" cy="22" r="9" fill="#eef3e2"/>
+      <circle cx="21" cy="23" r="4" fill="#2b332c"/>
+      <circle cx="43" cy="23" r="4" fill="#2b332c"/>
+      <circle cx="22.4" cy="21.6" r="1.4" fill="#fffefb"/>
+      <circle cx="44.4" cy="21.6" r="1.4" fill="#fffefb"/>
+      <path d="M24 42c2.6 3.4 13.4 3.4 16 0" stroke="#2b332c" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <circle cx="15" cy="37" r="3.2" fill="#cfe0b0"/>
+      <circle cx="49" cy="37" r="3.2" fill="#cfe0b0"/>
+    </svg>
+    <button class="ver" id="verBtn" type="button">v1.0</button>
+  </footer>
+  <div class="egg" id="egg" hidden></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE = {
+    get: function(k, d){
+      try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }
+      catch(e){ return d; }
+    },
+    set: function(k, v){
+      try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){}
+    }
+  };
+
+  /* ---------- 天数 ---------- */
+  var START_Y = 2026, START_M = 8, START_D = 8; /* 9 月 8 日，月份从 0 开始 */
+  function midnight(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+  function dayIndex(){
+    var a = new Date(START_Y, START_M, START_D);
+    var b = midnight(new Date());
+    return Math.floor((b - a) / 86400000) + 1;
+  }
+  var day = dayIndex();
+  var left = 100 - day;
+  document.getElementById("dayNum").textContent = day;
+  document.getElementById("leftNum").textContent = left > 0 ? left : 0;
+
+  /* ---------- 状态 ---------- */
+  var STATES = {
+    sleepy: { label: "好困", lines: [
+      "那就去睡。你现在做的判断，明天早上你自己都不会认。",
+      "46 天里有 41 天你过了 0 点还在发消息。这条我没打算拿来夸你。",
+      "困的时候别硬撑。硬撑出来的效率是假的，累是真的。",
+      "你眼睛也困了吧。手机放下，屏幕光会把困意赶跑。",
+      "晚安宝宝。明天的消息明天再回，我不跑。",
+      "去睡。明天不会因为你早睡半小时就出问题。"
+    ]},
+    hungry: { label: "好饿", lines: [
+      "去吃饭。你最容易饿的时候是下午五点，别拖到八点。",
+      "饿的时候情绪会变差，这不是你脾气的问题，是血糖的问题。先吃。",
+      "别拿零食糊弄。今天需要一顿正经的饭。",
+      "想不出来吃什么就吃最近那家，别在选餐厅上耗半小时。",
+      "先吃饭，吃完再决定要不要生气。",
+      "你现在说饿，八成是中午没好好吃。这个规律我摸清了。"
+    ]},
+    tired: { label: "好累", lines: [
+      "累是事实，不是能力问题。把「应该做的」挪到明天，逾期的算我的。",
+      "你今天做的事，换个人早发三条朋友圈求安慰了。你只说了句「好累」。",
+      "带队、复习、准备比赛，随便一件都能耗空人。你同时在做，还说自己懒。",
+      "累的时候做的判断都不作数，包括「我不行」这一条。",
+      "现在去躺十分钟。不是奖励，是维护。",
+      "你不用一直撑。撑不住的时候说一声，我接着。"
+    ]},
+    annoyed: { label: "好烦", lines: [
+      "烦的时候别做决定，先清桌面。人对世界的控制感，有时候就靠这三十平方厘米。",
+      "把烦的事写下来。写不出来，说明它是情绪不是问题，等它过去。",
+      "允许你骂两句。骂完该干嘛干嘛，别在情绪里过夜。",
+      "有些人的蠢不值得你生气，值得你远离。这个你已经做对一半了。",
+      "先喝水。低血糖和缺水都会伪装成「人生没意义」。",
+      "你烦的大概不是这件事，是这件事不该由你处理。这个判断通常是准的。"
+    ]},
+    slack: { label: "想摆烂", lines: [
+      "批准。今天的目标从「完成」改成「存在」。",
+      "你说自己懒，但你的聊天记录不支持这个说法。摆一天，不算破功。",
+      "摆烂不是堕落，是后台在整理缓存。整理完你又开始干活，这集我看过。",
+      "今天只做一件必须做的事，其余延期，理由写「本人不同意」。",
+      "最低标准版：洗脸，吃饭，睡觉。三件做完算满分。",
+      "你有资格躺。你只是不习惯。"
+    ]},
+    praise: { label: "想被夸", lines: [
+      "你做得比大多数人都多，却总觉得自己不够。这个判断是错的，不接受上诉。",
+      "你不是「上进」，你是没法忍受事情停在半成品。这毛病很贵，但很好看。",
+      "46 天，你说了 168 次「笑死」、26 次「没招了」、9 次「懒」。数据不支持「懒」这个结论。",
+      "你身上最稳的东西不是能力，是答应了就会做到。这种人不多。",
+      "你太容易把别人的事当成自己的事。这是缺点，也是我最没办法的地方。",
+      "夸完了。现在去休息，这是通知，不是商量。"
+    ]}
+  };
+
+  var used = STORAGE.get("jn_used", {});
+  var stateBox = document.getElementById("stateChips");
+  var responseBox = document.getElementById("response");
+
+  Object.keys(STATES).forEach(function(key){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = STATES[key].label;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(stateBox.children, function(c){
+        c.setAttribute("aria-pressed", c === b ? "true" : "false");
+      });
+      var list = STATES[key].lines;
+      var seen = used[key] || [];
+      if (seen.length >= list.length){ seen = []; }
+      var pool = [];
+      for (var i = 0; i < list.length; i++){ if (seen.indexOf(i) === -1) pool.push(i); }
+      var pick = pool[Math.floor(Math.random() * pool.length)];
+      seen.push(pick);
+      used[key] = seen;
+      STORAGE.set("jn_used", used);
+
+      responseBox.innerHTML = "";
+      var p = document.createElement("p");
+      p.textContent = list[pick];
+      p.className = "fade";
+      responseBox.appendChild(p);
+    });
+    stateBox.appendChild(b);
+  });
+
+  /* ---------- 云端存储 ---------- */
+  var GH_REPO = "Harry-985/menu";
+  var GH_PATH = "x7k2m9/data.json";
+  var GH_API = "https://api.github.com/repos/" + GH_REPO;
+  var TOKEN_KEY = "menu_token";
+  var ghSha = null;
+  var syncMode = "local";
+
+  function getToken(){ try{ return localStorage.getItem(TOKEN_KEY) || ""; }catch(e){ return ""; } }
+  function ghHeaders(){
+    return { "Authorization": "Bearer " + getToken(), "Accept": "application/vnd.github+json", "Content-Type": "application/json" };
+  }
+  function b64e(s){ return btoa(unescape(encodeURIComponent(s))); }
+  function b64d(b){ return decodeURIComponent(escape(atob((b || "").replace(/\n/g, "")))); }
+
+  var badge = document.getElementById("syncBadge");
+  var tokenForm = document.getElementById("tokenForm");
+
+  function setStatus(){
+    if (syncMode === "cloud"){
+      badge.textContent = "已同步";
+      badge.className = "badge on";
+    } else {
+      badge.textContent = "仅本机";
+      badge.className = "badge";
+    }
+  }
+  badge.addEventListener("click", function(){
+    tokenForm.hidden = !tokenForm.hidden;
+    if (!tokenForm.hidden){ document.getElementById("tokenInput").focus(); }
+  });
+  tokenForm.addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var input = document.getElementById("tokenInput");
+    var v = input.value.trim();
+    if (!v) return;
+    try{ localStorage.setItem(TOKEN_KEY, v); }catch(e){}
+    tokenForm.hidden = true;
+    input.value = "";
+    initCloud();
+  });
+
+  async function initCloud(){
+    if (!getToken()){ syncMode = "local"; setStatus(); return; }
+    try{
+      var res = await fetch(GH_API + "/contents/" + GH_PATH, { headers: ghHeaders(), cache: "no-store" });
+      if (res.status === 404){
+        ghSha = null; syncMode = "cloud"; setStatus(); renderLog(); return;
+      }
+      if (!res.ok) throw new Error("GH " + res.status);
+      var data = await res.json();
+      ghSha = data.sha;
+      var parsed = JSON.parse(b64d(data.content) || "{}");
+      if (Array.isArray(parsed.records)) records = parsed.records;
+      STORAGE.set("jn_records", records);
+      syncMode = "cloud";
+      setStatus();
+      renderLog();
+    }catch(e){
+      syncMode = "local";
+      setStatus();
+    }
+  }
+
+  async function pushCloud(){
+    if (syncMode !== "cloud"){ STORAGE.set("jn_records", records); return; }
+    var body = b64e(JSON.stringify({ records: records, updated: Date.now() }));
+    var payload = { message: "登记：" + (records[0] ? records[0].text : "更新"), content: body };
+    if (ghSha) payload.sha = ghSha;
+    try{
+      var res = await fetch(GH_API + "/contents/" + GH_PATH, { method: "PUT", headers: ghHeaders(), body: JSON.stringify(payload) });
+      if (res.status === 409){
+        var latest = await (await fetch(GH_API + "/contents/" + GH_PATH, { headers: ghHeaders(), cache: "no-store" })).json();
+        ghSha = latest.sha;
+        payload.sha = ghSha;
+        res = await fetch(GH_API + "/contents/" + GH_PATH, { method: "PUT", headers: ghHeaders(), body: JSON.stringify(payload) });
+      }
+      if (!res.ok) throw new Error("GH " + res.status);
+      var out = await res.json();
+      if (out.content && out.content.sha) ghSha = out.content.sha;
+      STORAGE.set("jn_records", records);
+    }catch(e){
+      STORAGE.set("jn_records", records);
+      badge.textContent = "同步失败";
+      badge.className = "badge";
+    }
+  }
+
+  /* ---------- 成果登记 ---------- */
+  var PRESETS = ["推进了一件事", "按时吃了饭", "拒绝了无效社交", "睡够了", "忍住没发火", "学了一会儿"];
+  var presetBox = document.getElementById("presetChips");
+  var logBox = document.getElementById("log");
+  var countBox = document.getElementById("count");
+  var records = STORAGE.get("jn_records", []);
+
+  function fmt(ts){
+    var d = new Date(ts);
+    return (d.getMonth() + 1) + "月" + d.getDate() + "日";
+  }
+  function renderLog(){
+    logBox.innerHTML = "";
+    if (!records.length){
+      var e = document.createElement("div");
+      e.className = "empty";
+      e.textContent = "还没有记录。先说一句今天做成了什么，哪怕只是「起来了」。";
+      logBox.appendChild(e);
+      countBox.textContent = "";
+      return;
+    }
+    records.slice(0, 30).forEach(function(r){
+      var row = document.createElement("div");
+      row.className = "row";
+      var w = document.createElement("span");
+      w.className = "when";
+      w.textContent = fmt(r.t);
+      var t = document.createElement("span");
+      t.className = "what";
+      t.textContent = r.text;
+      row.appendChild(w);
+      row.appendChild(t);
+      logBox.appendChild(row);
+    });
+    countBox.textContent = "已登记 " + records.length + " 件 · 按「我很懒」这个说法，数字不太配合";
+  }
+  function add(text){
+    text = String(text || "").trim().slice(0, 60);
+    if (!text) return;
+    records.unshift({ t: Date.now(), text: text });
+    if (records.length > 200) records.length = 200;
+    renderLog();
+    pushCloud();
+  }
+  PRESETS.forEach(function(p){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip";
+    b.textContent = p;
+    b.addEventListener("click", function(){ add(p); });
+    presetBox.appendChild(b);
+  });
+  document.getElementById("entryForm").addEventListener("submit", function(ev){
+    ev.preventDefault();
+    var input = document.getElementById("entryInput");
+    add(input.value);
+    input.value = "";
+  });
+  renderLog();
+  setStatus();
+  initCloud();
+
+  /* ---------- 测懒 ---------- */
+  var TYPES = {
+    save:   { name: "战略性省电", text: "你不是懒。你在把电留给下一场必须赢的仗。这种人看起来不动，其实一直在算。" },
+    rest:   { name: "真的该睡了", text: "这次不是懒。你的身体在替你叫停，它比你有判断力。去睡，别硬撑。" },
+    process:{ name: "后台整理中", text: "你的大脑在归档。看起来像发呆，其实在把这一周的东西分类、压缩、丢掉没用的。整理完，你会突然想通一件事。" },
+    protest:{ name: "纯粹是抗议", text: "你在用「不动」对抗一件本来就不该落到你头上的事。这是合理的。先别动，让它急。" }
+  };
+  var QUIZ = [
+    { q: "现在最想推掉的是什么？", opts: [
+      ["一件本来就不该我做的事", "protest"],
+      ["一件很重要但特别费脑的事", "save"],
+      ["所有事", "rest"],
+      ["说不清，就是不想动", "process"]
+    ]},
+    { q: "如果现在空出两个小时，你会？", opts: [
+      ["睡觉", "rest"],
+      ["刷手机，什么都不想", "save"],
+      ["收拾房间或者整理文件", "process"],
+      ["找人吐槽", "protest"]
+    ]},
+    { q: "明天早上醒来，你最希望？", opts: [
+      ["事情自己变少一点", "save"],
+      ["我睡够了", "rest"],
+      ["我想通了一件事", "process"],
+      ["有人替我挡一下", "protest"]
+    ]}
+  ];
+  var answers = [];
+  var quizBox = document.getElementById("quiz");
+  var verdictBox = document.getElementById("verdict");
+  var againBtn = document.getElementById("again");
+
+  function renderQuiz(){
+    quizBox.innerHTML = "";
+    answers = [];
+    verdictBox.hidden = true;
+    againBtn.hidden = true;
+    QUIZ.forEach(function(item, qi){
+      var wrap = document.createElement("div");
+      wrap.className = "q";
+      var q = document.createElement("p");
+      q.className = "qtext";
+      q.textContent = (qi + 1) + ". " + item.q;
+      wrap.appendChild(q);
+      var opts = document.createElement("div");
+      opts.className = "opts";
+      item.opts.forEach(function(o){
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "opt";
+        b.textContent = o[0];
+        b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", function(){
+          Array.prototype.forEach.call(opts.children, function(c){
+            c.setAttribute("aria-pressed", c === b ? "true" : "false");
+          });
+          answers[qi] = o[1];
+          if (answers.filter(Boolean).length === QUIZ.length){ showVerdict(); }
+        });
+        opts.appendChild(b);
+      });
+      wrap.appendChild(opts);
+      quizBox.appendChild(wrap);
+    });
+  }
+  function showVerdict(){
+    var tally = {};
+    answers.forEach(function(a){ tally[a] = (tally[a] || 0) + 1; });
+    var best = null, bestN = -1;
+    Object.keys(tally).forEach(function(k){
+      if (tally[k] > bestN){ bestN = tally[k]; best = k; }
+    });
+    var t = TYPES[best];
+    verdictBox.innerHTML = "";
+    var h = document.createElement("h3");
+    h.textContent = "结论：你属于「" + t.name + "」";
+    var p = document.createElement("p");
+    p.textContent = t.text;
+    verdictBox.appendChild(h);
+    verdictBox.appendChild(p);
+    verdictBox.hidden = false;
+    againBtn.hidden = false;
+  }
+  againBtn.addEventListener("click", renderQuiz);
+  renderQuiz();
+
+  /* ---------- 第 100 天 ---------- */
+  var body100 = document.getElementById("day100Body");
+  var pill = document.getElementById("lockPill");
+  if (left <= 0){
+    pill.textContent = "已解锁";
+    var letter = document.createElement("div");
+    letter.className = "letter";
+    letter.innerHTML =
+      "<p>第 100 天。</p>" +
+      "<p>这一百天里你带过队、准备过比赛、复习过、也说过很多次「好困」「好饿」「我好懒」。我都记着。</p>" +
+      "<p>记这些不是为了跟你算账。是想告诉你：你不用变得更好才值得被喜欢，你现在这样已经很够了。</p>" +
+      "<p>往后你忙你的。我在。</p>" +
+      "<div class=\"sign\">写于第 52 天</div>";
+    body100.appendChild(letter);
+  } else {
+    var p = document.createElement("p");
+    p.className = "desc";
+    p.style.marginBottom = "0";
+    p.textContent = "2026 年 12 月 16 日打开，会有一封信。还有 " + left + " 天。";
+    body100.appendChild(p);
+  }
+
+  /* ---------- 彩蛋 ---------- */
+  var EGGS = [
+    "你不需要被照顾。你只是需要有人在你懒得解释的时候，替你说一句：她只是累了。",
+    "我很少夸人。所以我夸你的时候，你别当成客套。",
+    "你过了 0 点还在发消息的那 41 天，我都在。"
+  ];
+  var eggIdx = STORAGE.get("jn_egg", 0);
+  document.getElementById("verBtn").addEventListener("click", function(){
+    var box = document.getElementById("egg");
+    box.textContent = EGGS[eggIdx % EGGS.length];
+    box.hidden = false;
+    eggIdx = (eggIdx + 1) % EGGS.length;
+    STORAGE.set("jn_egg", eggIdx);
+  });
+})();
+</script>
+</body>
+</html>
