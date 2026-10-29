@@ -3,193 +3,329 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f5f6f3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#121614" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f3f4f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111512" media="(prefers-color-scheme: dark)">
 <meta name="robots" content="noindex,nofollow,noarchive">
 <title>裘女士控制台</title>
 <style>
 :root{
-  /* 版式：单栏终端，纸面底 + 墨绿强调，衬线标题配无衬线正文 */
-  --bg:#f5f6f3;
-  --surface:#fffefb;
-  --ink:#1b211d;
-  --muted:#6c756e;
-  --line:#dcdcd4;
-  --accent:#2f6b52;
-  --accent-ink:#ffffff;
-  --soft:#e7efe9;
-  --rail:#c9cec7;
+  --bg:#f3f4f1;
+  --surface:#fbfbf8;
+  --ink:#171b18;
+  --muted:#6b736d;
+  --line:#d7d9d1;
+  --hair:#e6e7e0;
+  --accent:#2e6a51;
+  --on-accent:#ffffff;
+  --accent-soft:#e3ece6;
+  --rail:#c2c8c1;
   --serif:"Source Han Serif SC","Noto Serif SC","Songti SC",STSong,"SimSun",serif;
   --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#121614;--surface:#1a1f1c;--ink:#e9ece7;--muted:#96a099;
-    --line:#2b332e;--accent:#7cc3a0;--accent-ink:#0b120e;--soft:#1d2822;--rail:#39423b;
+    --bg:#111512;--surface:#181d19;--ink:#e9ece6;--muted:#8e988f;
+    --line:#2a312c;--hair:#222823;--accent:#82c9a5;--on-accent:#0b120e;
+    --accent-soft:#1b2621;--rail:#39423b;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#121614;--surface:#1a1f1c;--ink:#e9ece7;--muted:#96a099;
-  --line:#2b332e;--accent:#7cc3a0;--accent-ink:#0b120e;--soft:#1d2822;--rail:#39423b;
+  --bg:#111512;--surface:#181d19;--ink:#e9ece6;--muted:#8e988f;
+  --line:#2a312c;--hair:#222823;--accent:#82c9a5;--on-accent:#0b120e;
+  --accent-soft:#1b2621;--rail:#39423b;
   color-scheme:dark;
 }
 
-*{box-sizing:border-box}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{
   margin:0;
   background:var(--bg);
   color:var(--ink);
   font-family:var(--sans);
-  font-size:16px;
-  line-height:1.75;
-  padding-left:max(18px,env(safe-area-inset-left,0px));
-  padding-right:max(18px,env(safe-area-inset-right,0px));
-  padding-block:max(32px,env(safe-area-inset-top,0px)) max(48px,env(safe-area-inset-bottom,0px));
+  font-size:15.5px;
+  line-height:1.8;
+  padding-left:max(20px,env(safe-area-inset-left,0px));
+  padding-right:max(20px,env(safe-area-inset-right,0px));
+  padding-block:max(40px,env(safe-area-inset-top,0px)) max(56px,env(safe-area-inset-bottom,0px));
   -webkit-font-smoothing:antialiased;
   -webkit-text-size-adjust:100%;
 }
-.wrap{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.wrap{max-width:700px;margin:0 auto}
 
-header{display:flex;flex-direction:column;gap:10px;padding-bottom:4px}
-.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--muted);text-transform:uppercase}
+/* ---------- 页头 ---------- */
+.kicker{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;
+  color:var(--muted);text-transform:uppercase;
+}
 h1{
   font-family:var(--serif);
-  font-size:clamp(30px,7vw,42px);
-  line-height:1.15;
-  font-weight:600;
-  letter-spacing:.01em;
-  margin:0;
+  font-size:clamp(36px,9.5vw,56px);
+  line-height:1.08;
+  font-weight:400;
+  letter-spacing:0;
+  margin:14px 0 0;
   text-wrap:balance;
 }
-.sub{margin:0;color:var(--muted);font-size:14.5px}
+.lede{
+  margin:18px 0 0;
+  font-size:15px;
+  line-height:1.85;
+  color:var(--muted);
+  max-width:30em;
+}
+.lede b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.meta{
+  display:flex;flex-wrap:wrap;gap:0 30px;
+  margin-top:26px;padding-top:16px;
+  border-top:1px solid var(--ink);
+}
+.meta div{display:flex;align-items:baseline;gap:9px}
+.meta .n{font-family:var(--serif);font-size:26px;line-height:1;font-variant-numeric:tabular-nums}
+.meta .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--muted)}
 
-.stats{display:flex;flex-wrap:wrap;gap:28px;margin-top:14px;padding-top:16px;border-top:1px solid var(--line)}
-.stat{display:flex;flex-direction:column;gap:2px;min-width:0}
-.num{font-family:var(--serif);font-size:32px;line-height:1.1;font-variant-numeric:tabular-nums}
-.lab{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted)}
+/* ---------- 章节头 ---------- */
+section{margin-top:62px}
+.sect{
+  display:flex;align-items:baseline;gap:13px;
+  padding-bottom:12px;margin-bottom:24px;
+  border-bottom:1px solid var(--line);
+}
+.sect .idx{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  color:var(--accent);padding-top:2px;flex:none;
+}
+.sect h2{
+  font-family:var(--serif);font-size:20px;font-weight:600;
+  margin:0;letter-spacing:.01em;
+}
+.sect .note{
+  margin-left:auto;font-family:var(--mono);font-size:10.5px;
+  color:var(--muted);letter-spacing:.06em;white-space:nowrap;
+}
 
-.card{
-  background:var(--surface);
-  border:1px solid var(--line);
-  border-radius:4px;
-  padding:22px 20px;
+/* ---------- 数据牌 ---------- */
+.plate{
+  display:grid;grid-template-columns:1fr 1fr;
+}
+.plate .cell{
+  padding:20px 16px 20px 0;
+  border-bottom:1px solid var(--hair);
   min-width:0;
 }
-.card h2{
-  font-family:var(--serif);
-  font-size:19px;
-  font-weight:600;
-  margin:0 0 4px;
-  letter-spacing:.01em;
+.plate .cell:nth-child(2n){padding-left:18px;border-left:1px solid var(--hair)}
+@media(min-width:600px){
+  .plate{grid-template-columns:repeat(4,1fr)}
+  .plate .cell{padding:22px 18px 22px 0}
+  .plate .cell:nth-child(2n){padding-left:0;border-left:none}
+  .plate .cell + .cell{border-left:1px solid var(--hair);padding-left:18px}
+  .plate .cell:nth-child(4n+1){border-left:none;padding-left:0}
 }
-.cardhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.cardhead h2{margin:0}
-.badge{
-  font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
-  color:var(--muted);background:transparent;
-  border:1px solid var(--line);border-radius:99px;
-  padding:3px 10px;cursor:pointer;white-space:nowrap;
+.plate .v{
+  font-family:var(--serif);font-size:clamp(30px,7.6vw,42px);
+  line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em;
 }
-.badge.on{color:var(--accent);border-color:var(--accent)}
-.desc{margin:0 0 16px;color:var(--muted);font-size:13.5px;line-height:1.6}
+.plate .v .u{font-size:.44em;color:var(--muted);margin-left:3px;letter-spacing:0}
+.plate .k{font-size:12.5px;color:var(--muted);margin-top:9px;line-height:1.5}
 
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-top:18px}
-.cell{background:var(--surface);padding:14px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
-.cell .v{font-family:var(--serif);font-size:24px;line-height:1.2;font-variant-numeric:tabular-nums}
-.cell .k{font-size:12px;color:var(--muted);line-height:1.4}
-.note{margin:14px 0 0;font-size:13.5px;line-height:1.8;color:var(--ink)}
-.note .hl{background:var(--soft);padding:0 3px;border-radius:2px}
+/* ---------- 24 小时 ---------- */
+.chart{margin-top:34px}
+.chart-head{display:flex;align-items:baseline;gap:10px;margin-bottom:16px}
+.chart-head b{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  color:var(--accent);font-weight:400;
+}
+.chart-head span{font-size:13.5px}
+.bars{
+  display:flex;align-items:flex-end;gap:2px;
+  height:130px;border-bottom:1px solid var(--line);
+}
+.bar{
+  flex:1;min-width:0;border:0;padding:0;margin:0;
+  background:var(--accent);cursor:pointer;border-radius:1px 1px 0 0;
+  transition:opacity .12s;
+}
+.bar:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.hours{display:flex;gap:2px;margin-top:7px}
+.hours span{
+  flex:1;min-width:0;text-align:center;
+  font-family:var(--mono);font-size:9px;color:var(--muted);
+}
+.hours span.hide{visibility:hidden}
+.readout{margin-top:14px;font-size:13.5px;color:var(--muted);min-height:1.6em}
+.readout b{
+  font-family:var(--mono);font-size:12.5px;color:var(--ink);
+  font-weight:500;letter-spacing:.02em;
+}
+.chart .tip{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;
+  color:var(--muted);margin-top:6px;
+}
 
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 18px}
-.chip{
-  font-family:var(--sans);
+/* ---------- 明细 ---------- */
+.specs{margin-top:34px;border-top:1px solid var(--hair)}
+.specs .row{
+  display:flex;align-items:baseline;gap:14px;
+  padding:11px 0;border-bottom:1px solid var(--hair);
   font-size:14px;
-  color:var(--ink);
-  background:transparent;
-  border:1px solid var(--rail);
-  border-radius:3px;
-  padding:7px 15px;
-  cursor:pointer;
+}
+.specs .row .k{color:var(--muted);flex:none;width:7.6em}
+.specs .row .v{margin-left:auto;text-align:right;font-variant-numeric:tabular-nums}
+.specs .row .v b{font-family:var(--serif);font-size:17px;font-weight:600}
+
+/* ---------- 高频词 ---------- */
+.words{margin-top:36px}
+.words .cap{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  color:var(--accent);margin-bottom:14px;
+}
+.words .list{display:flex;flex-wrap:wrap;gap:8px}
+.words .w{
+  display:flex;align-items:baseline;gap:6px;
+  border:1px solid var(--line);border-radius:2px;
+  padding:5px 11px;background:var(--surface);
+}
+.words .w .s{font-family:var(--serif);font-size:14px}
+.words .w .c{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+
+/* ---------- 状态 ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  font-family:var(--sans);font-size:14px;color:var(--ink);
+  background:var(--surface);border:1px solid var(--rail);
+  border-radius:2px;padding:8px 16px;cursor:pointer;
   transition:background .15s,border-color .15s,color .15s;
 }
 .chip:hover{border-color:var(--accent);color:var(--accent)}
-.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.chip:focus-visible,.entry button:focus-visible,input:focus-visible,.quizbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-
-.response{
-  border-left:2px solid var(--accent);
-  padding:2px 0 2px 16px;
-  min-height:96px;
-  display:flex;
-  align-items:center;
+.chip[aria-pressed="true"]{
+  background:var(--accent);border-color:var(--accent);color:var(--on-accent);
 }
-.response p{margin:0;font-family:var(--serif);font-size:16.5px;line-height:1.9}
-.response .hint{font-family:var(--sans);color:var(--muted);font-size:14px;line-height:1.7}
-.fade{animation:fade .28s ease-out}
-@keyframes fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.response{margin-top:28px;padding-top:24px;border-top:1px solid var(--line);min-height:108px}
+.response .label{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  color:var(--accent);margin-bottom:10px;
+}
+.response p{margin:0;font-family:var(--serif);font-size:17px;line-height:1.95}
+.response .hint{font-family:var(--sans);color:var(--muted);font-size:14px;line-height:1.8}
+.fade{animation:fade .3s ease-out}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.fade{animation:none}}
 
-.entry{display:flex;gap:8px;margin-top:4px}
+/* ---------- 登记 ---------- */
+.sect .badge{margin-left:auto;align-self:center}
+.badge{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  color:var(--muted);background:transparent;
+  border:1px solid var(--line);border-radius:2px;
+  padding:3px 9px;cursor:pointer;white-space:nowrap;
+}
+.badge.on{color:var(--accent);border-color:var(--accent)}
+.entry{display:flex;gap:8px;margin-top:14px}
 .entry input{
-  flex:1;min-width:0;
-  font-family:var(--sans);font-size:14.5px;
-  color:var(--ink);background:var(--bg);
-  border:1px solid var(--rail);border-radius:3px;
-  padding:9px 12px;
+  flex:1;min-width:0;font-family:var(--sans);font-size:14.5px;
+  color:var(--ink);background:var(--surface);
+  border:1px solid var(--rail);border-radius:2px;padding:10px 13px;
 }
 .entry input::placeholder{color:var(--muted)}
 .entry button{
-  font-family:var(--sans);font-size:14px;
-  color:var(--accent-ink);background:var(--accent);
-  border:1px solid var(--accent);border-radius:3px;
-  padding:9px 18px;cursor:pointer;white-space:nowrap;
+  font-family:var(--sans);font-size:14px;color:var(--on-accent);background:var(--accent);
+  border:1px solid var(--accent);border-radius:2px;
+  padding:10px 20px;cursor:pointer;white-space:nowrap;
 }
 .entry button:active{transform:translateY(1px)}
+.log{margin-top:24px;border-top:1px solid var(--hair)}
+.log .row{
+  display:flex;gap:14px;padding:11px 0;
+  border-bottom:1px solid var(--hair);font-size:14px;min-width:0;
+}
+.log .when{
+  font-family:var(--mono);font-size:10.5px;color:var(--muted);
+  white-space:nowrap;padding-top:3px;font-variant-numeric:tabular-nums;
+}
+.log .what{min-width:0;overflow-wrap:anywhere}
+.empty{font-size:13.5px;color:var(--muted);padding:14px 0}
+.count{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:14px;letter-spacing:.05em}
 
-.log{margin-top:18px;display:flex;flex-direction:column;gap:0}
-.row{display:flex;gap:14px;padding:10px 0;border-top:1px solid var(--line);font-size:14px;min-width:0}
-.row:first-child{border-top:none}
-.row .when{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:nowrap;padding-top:3px;font-variant-numeric:tabular-nums}
-.row .what{min-width:0;overflow-wrap:anywhere}
-.empty{font-size:13.5px;color:var(--muted);padding-top:6px}
-.count{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:12px;letter-spacing:.04em}
-
-.quiz .q{margin-top:18px}
-.qtext{font-size:15px;margin:0 0 8px;font-weight:500}
+/* ---------- 测懒 ---------- */
+.q{margin-top:26px}
+.q:first-child{margin-top:0}
+.qtext{font-size:14.5px;margin:0 0 10px;color:var(--ink)}
+.qtext .no{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-right:9px}
 .opts{display:flex;flex-wrap:wrap;gap:7px}
 .opt{
-  font-size:13.5px;font-family:var(--sans);
-  background:transparent;color:var(--ink);
-  border:1px solid var(--rail);border-radius:3px;
-  padding:6px 12px;cursor:pointer;text-align:left;
+  font-size:13.5px;font-family:var(--sans);text-align:left;
+  background:var(--surface);color:var(--ink);
+  border:1px solid var(--rail);border-radius:2px;
+  padding:7px 13px;cursor:pointer;
 }
 .opt:hover{border-color:var(--accent);color:var(--accent)}
-.opt[aria-pressed="true"]{background:var(--soft);border-color:var(--accent);color:var(--accent)}
-.verdict{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
-.verdict h3{font-family:var(--serif);font-size:17px;margin:0 0 6px}
-.verdict p{margin:0;font-size:14.5px;color:var(--ink)}
-.again{margin-top:14px;background:none;border:none;color:var(--muted);font-size:12.5px;font-family:var(--mono);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.opt[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.verdict{margin-top:30px;padding-top:24px;border-top:1px solid var(--line)}
+.verdict .lb{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;
+  color:var(--accent);margin-bottom:8px;
+}
+.verdict h3{font-family:var(--serif);font-size:19px;margin:0 0 8px;font-weight:600}
+.verdict p{margin:0;font-size:14.5px;line-height:1.85}
+.again{
+  margin-top:16px;background:none;border:none;color:var(--muted);
+  font-size:10.5px;font-family:var(--mono);cursor:pointer;padding:0;
+  letter-spacing:.08em;text-decoration:underline;text-underline-offset:3px;
+}
 
-.day100{border-style:dashed}
-.lockrow{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.pill{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--muted);border:1px solid var(--line);border-radius:99px;padding:2px 10px}
-.letter p{font-family:var(--serif);font-size:16.5px;line-height:2;margin:0 0 14px}
-.letter p:last-child{margin-bottom:0}
-.sign{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em;margin-top:18px}
+/* ---------- 第 100 天 ---------- */
+.lock{
+  border:1px solid var(--line);border-radius:2px;
+  padding:22px 20px;background:var(--surface);
+}
+.lock .top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.lock .cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--muted)}
+.lock .pill{
+  font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+  color:var(--muted);border:1px solid var(--line);padding:2px 9px;border-radius:2px;
+}
+.lock .pill.on{color:var(--accent);border-color:var(--accent)}
+.countdown{
+  font-family:var(--serif);font-size:clamp(42px,11vw,64px);
+  line-height:1;margin:20px 0 0;font-variant-numeric:tabular-nums;
+  letter-spacing:-.02em;
+}
+.countdown .u{font-size:.3em;color:var(--muted);margin-left:7px;letter-spacing:0}
+.lock .until{
+  font-family:var(--mono);font-size:10.5px;color:var(--muted);
+  letter-spacing:.1em;margin-top:12px;
+}
+.letter{margin-top:4px}
+.letter p{font-family:var(--serif);font-size:16.5px;line-height:2;margin:0 0 15px}
+.letter p:first-child{margin-top:16px}
+.letter p:last-of-type{margin-bottom:0}
+.sign{font-family:var(--mono);font-size:10.5px;color:var(--muted);letter-spacing:.06em;margin-top:20px}
 
-footer{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:6px;color:var(--muted)}
-.frog{width:38px;height:38px;flex:none}
-.ver{font-family:var(--mono);font-size:11px;letter-spacing:.1em;background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 0}
-.egg{margin-top:10px;font-family:var(--serif);font-size:15px;color:var(--ink);line-height:1.9;border-top:1px solid var(--line);padding-top:12px}
+/* ---------- 页脚 ---------- */
+footer{
+  margin-top:72px;padding-top:18px;border-top:1px solid var(--ink);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+}
+.frog{width:34px;height:34px;flex:none;opacity:.9}
+.foot-r{display:flex;align-items:center;gap:16px}
+.footnote{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em}
+.ver{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+  background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 0;
+}
+.egg{
+  margin-top:18px;font-family:var(--serif);font-size:15px;
+  line-height:1.95;padding-top:16px;border-top:1px solid var(--hair);
+}
 [hidden]{display:none !important}
 
-@media (max-width:420px){
-  .stats{gap:20px}
-  .grid{grid-template-columns:repeat(2,1fr)}
+@media (max-width:400px){
   .entry{flex-wrap:wrap}
   .entry button{flex:1}
+  .specs .row .k{width:6.2em}
+  .words .w{padding:4px 9px}
 }
 </style>
 </head>
@@ -197,72 +333,97 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
 
 <div class="wrap">
 
-  <header>
-    <div class="kicker">私人终端 · 一位用户</div>
-    <h1>裘女士控制台</h1>
-    <p class="sub">这里不放鸡汤。放点你用得上的东西。</p>
-    <div class="stats">
-      <div class="stat"><span class="num" id="dayNum">52</span><span class="lab">在一起第几天</span></div>
-      <div class="stat"><span class="num" id="leftNum">48</span><span class="lab">距第 100 天</span></div>
-    </div>
-  </header>
+  <div class="kicker">私人档案 · 只给一处</div>
+  <h1>裘女士控制台</h1>
+  <p class="lede">9 月 14 日到现在，我们说了 <b>18,860</b> 句话，一天没断过。这里记着其中能用的那部分。</p>
 
-  <section class="card">
-    <h2>你的一些数据</h2>
-    <p class="desc">9 月 14 日到 10 月 29 日，我们聊了这些。</p>
-    <div class="grid">
-      <div class="cell"><span class="v">18,860</span><span class="k">条消息</span></div>
-      <div class="cell"><span class="v">9,875</span><span class="k">条是你发的</span></div>
-      <div class="cell"><span class="v">7.4</span><span class="k">字，平均每条</span></div>
-      <div class="cell"><span class="v">168</span><span class="k">次「笑死」</span></div>
-      <div class="cell"><span class="v">369</span><span class="k">次叫我宝宝</span></div>
-      <div class="cell"><span class="v">34 : 22</span><span class="k">你先开口的次数</span></div>
+  <div class="meta">
+    <div><span class="n" id="dayNum">52</span><span class="l">在一起第几天</span></div>
+    <div><span class="n" id="leftNum">48</span><span class="l">距第 100 天</span></div>
+  </div>
+
+  <section>
+    <div class="sect"><span class="idx">01</span><h2>读数</h2><span class="note">9.14 — 10.29</span></div>
+
+    <div class="plate">
+      <div class="cell"><div class="v">46<span class="u">天</span></div><div class="k">一天没断过</div></div>
+      <div class="cell"><div class="v">89<span class="u">%</span></div><div class="k">你发完，她五分钟内回</div></div>
+      <div class="cell"><div class="v">6<span class="u">字</span></div><div class="k">她每条消息的中位长度</div></div>
+      <div class="cell"><div class="v">135<span class="u">次</span></div><div class="k">她说「嘻嘻」</div></div>
     </div>
-    <p class="note">46 天里，有 <span class="hl">41 天</span>你过了 0 点还在发消息。0 点是你一天里最忙的时候，比上课时间还忙。这个我记着，不是为了管你。</p>
+
+    <div class="chart">
+      <div class="chart-head"><b>24H</b><span>她一天里什么时候在说话</span></div>
+      <div class="bars" id="bars"></div>
+      <div class="hours" id="hours"></div>
+      <div class="readout" id="readout"></div>
+      <div class="tip">按一下柱子</div>
+    </div>
+
+    <div class="specs">
+      <div class="row"><span class="k">总消息</span><span class="v"><b>18,860</b> 条</span></div>
+      <div class="row"><span class="k">她发的</span><span class="v"><b>9,875</b> 条 · 占 52%</span></div>
+      <div class="row"><span class="k">她最长一条</span><span class="v"><b>1,348</b> 字</span></div>
+      <div class="row"><span class="k">一两个字的</span><span class="v"><b>1,386</b> 条</span></div>
+      <div class="row"><span class="k">叫我宝宝</span><span class="v"><b>369</b> 次</span></div>
+      <div class="row"><span class="k">她先开口</span><span class="v"><b>34</b> 次 · 你 22 次</span></div>
+    </div>
+
+    <div class="words">
+      <div class="cap">她最常说的</div>
+      <div class="list">
+        <span class="w"><span class="s">嘻嘻</span><span class="c">135</span></span>
+        <span class="w"><span class="s">笑死我了</span><span class="c">75</span></span>
+        <span class="w"><span class="s">我去</span><span class="c">70</span></span>
+        <span class="w"><span class="s">好好好</span><span class="c">45</span></span>
+        <span class="w"><span class="s">嗯呢</span><span class="c">42</span></span>
+        <span class="w"><span class="s">哦哦哦</span><span class="c">42</span></span>
+        <span class="w"><span class="s">我不行了</span><span class="c">19</span></span>
+        <span class="w"><span class="s">没招了</span><span class="c">14</span></span>
+        <span class="w"><span class="s">被发现了</span><span class="c">14</span></span>
+      </div>
+    </div>
   </section>
 
-  <section class="card">
-    <h2>现在是什么状态</h2>
-    <p class="desc">选一个。每次点，给你的都不一样。</p>
+  <section>
+    <div class="sect"><span class="idx">02</span><h2>现在是什么状态</h2></div>
     <div class="chips" id="stateChips"></div>
     <div class="response" id="response">
-      <p class="hint">你不需要先解释发生了什么。选个状态就行。</p>
+      <p class="hint">选一个。不用先解释发生了什么。</p>
     </div>
   </section>
 
-  <section class="card">
-    <div class="cardhead">
-      <h2>成果登记处</h2>
-      <button class="badge" id="syncBadge" type="button">仅本机</button>
-    </div>
-    <p class="desc">你嘴上说自己懒。这里只记事实。</p>
+  <section>
+    <div class="sect"><span class="idx">03</span><h2>成果登记处</h2><button class="badge" id="syncBadge" type="button">仅本机</button></div>
     <div class="chips" id="presetChips"></div>
     <form class="entry" id="entryForm">
       <input id="entryInput" type="text" maxlength="60" placeholder="或者自己写一句" autocomplete="off" aria-label="记录一件事">
       <button type="submit">记一笔</button>
     </form>
     <form class="entry" id="tokenForm" hidden>
-      <input id="tokenInput" type="password" placeholder="粘贴 GitHub token（github_pat_ 开头）" autocomplete="off" aria-label="GitHub token">
+      <input id="tokenInput" type="password" placeholder="粘贴 GitHub token" autocomplete="off" aria-label="GitHub token">
       <button type="submit">连接</button>
     </form>
     <div class="log" id="log"></div>
     <div class="count" id="count"></div>
   </section>
 
-  <section class="card quiz">
-    <h2>测一下：你今天的懒是哪一种</h2>
-    <p class="desc">三道题。答完出结论，结论不一定好听。</p>
+  <section>
+    <div class="sect"><span class="idx">04</span><h2>你今天的懒是哪一种</h2></div>
     <div id="quiz"></div>
     <div class="verdict" id="verdict" hidden></div>
     <button class="again" id="again" type="button" hidden>重新测一次</button>
   </section>
 
-  <section class="card day100" id="day100Card">
-    <div class="lockrow">
-      <h2>第 100 天</h2>
-      <span class="pill" id="lockPill">未解锁</span>
+  <section>
+    <div class="sect"><span class="idx">05</span><h2>第 100 天</h2></div>
+    <div class="lock" id="day100Card">
+      <div class="top">
+        <span class="cap">一封信</span>
+        <span class="pill" id="lockPill">未解锁</span>
+      </div>
+      <div id="day100Body"></div>
     </div>
-    <div id="day100Body"></div>
   </section>
 
   <footer>
@@ -278,9 +439,13 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
       <circle cx="15" cy="37" r="3.2" fill="#cfe0b0"/>
       <circle cx="49" cy="37" r="3.2" fill="#cfe0b0"/>
     </svg>
-    <button class="ver" id="verBtn" type="button">v1.0</button>
+    <div class="foot-r">
+      <span class="footnote">CN—0952</span>
+      <button class="ver" id="verBtn" type="button">v1.1</button>
+    </div>
   </footer>
   <div class="egg" id="egg" hidden></div>
+
 </div>
 
 <script>
@@ -298,7 +463,7 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
   };
 
   /* ---------- 天数 ---------- */
-  var START_Y = 2026, START_M = 8, START_D = 8; /* 9 月 8 日，月份从 0 开始 */
+  var START_Y = 2026, START_M = 8, START_D = 8;
   function midnight(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
   function dayIndex(){
     var a = new Date(START_Y, START_M, START_D);
@@ -309,6 +474,60 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
   var left = 100 - day;
   document.getElementById("dayNum").textContent = day;
   document.getElementById("leftNum").textContent = left > 0 ? left : 0;
+
+  /* ---------- 24 小时图 ---------- */
+  var HOURLY = [1472,837,30,9,6,0,1,26,180,445,443,521,433,359,352,379,609,711,595,504,426,382,514,641];
+  var MAXV = 0;
+  for (var i = 0; i < HOURLY.length; i++){ if (HOURLY[i] > MAXV) MAXV = HOURLY[i]; }
+
+  var barsBox = document.getElementById("bars");
+  var hoursBox = document.getElementById("hours");
+  var readout = document.getElementById("readout");
+  var barEls = [];
+
+  function fmtN(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
+  function showBar(el){
+    var hh = parseInt(el.dataset.h, 10);
+    var v = HOURLY[hh];
+    var tail = "";
+    if (hh === 0) tail = "　全天最高";
+    else if (v === 0) tail = "　一条都没有";
+    else if (hh >= 5 && hh <= 7) tail = "　这个点她在睡";
+    readout.innerHTML = "";
+    var bEl = document.createElement("b");
+    bEl.textContent = hh + " 点";
+    readout.appendChild(bEl);
+    readout.appendChild(document.createTextNode("　" + fmtN(v) + " 条" + tail));
+  }
+
+  (function buildChart(){
+    for (var h = 0; h < HOURLY.length; h++){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "bar";
+      var pct = MAXV ? (HOURLY[h] / MAXV) : 0;
+      b.style.height = Math.max(2, Math.round(pct * 100)) + "%";
+      b.style.opacity = String(0.16 + pct * 0.84);
+      b.setAttribute("aria-label", h + " 点，" + HOURLY[h] + " 条");
+      b.dataset.h = String(h);
+      b.addEventListener("mouseenter", function(){ showBar(this); });
+      b.addEventListener("focus", function(){ showBar(this); });
+      b.addEventListener("click", function(){ showBar(this); });
+      barsBox.appendChild(b);
+      barEls.push(b);
+
+      var s = document.createElement("span");
+      if (h % 6 === 0 || h === 23){
+        s.textContent = String(h);
+      } else {
+        s.textContent = "·";
+        s.className = "hide";
+      }
+      hoursBox.appendChild(s);
+    }
+    if (barEls.length) showBar(barEls[0]);
+  })();
 
   /* ---------- 状态 ---------- */
   var STATES = {
@@ -355,7 +574,7 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
     praise: { label: "想被夸", lines: [
       "你做得比大多数人都多，却总觉得自己不够。这个判断是错的，不接受上诉。",
       "你不是「上进」，你是没法忍受事情停在半成品。这毛病很贵，但很好看。",
-      "46 天，你说了 168 次「笑死」、26 次「没招了」、9 次「懒」。数据不支持「懒」这个结论。",
+      "46 天，你说了 135 次「嘻嘻」、14 次「没招了」、9 次「懒」。数据不支持「懒」这个结论。",
       "你身上最稳的东西不是能力，是答应了就会做到。这种人不多。",
       "你太容易把别人的事当成自己的事。这是缺点，也是我最没办法的地方。",
       "夸完了。现在去休息，这是通知，不是商量。"
@@ -387,9 +606,13 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
       STORAGE.set("jn_used", used);
 
       responseBox.innerHTML = "";
+      var lab = document.createElement("div");
+      lab.className = "label";
+      lab.textContent = STATES[key].label;
       var p = document.createElement("p");
       p.textContent = list[pick];
       p.className = "fade";
+      responseBox.appendChild(lab);
       responseBox.appendChild(p);
     });
     stateBox.appendChild(b);
@@ -492,7 +715,8 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
 
   function fmt(ts){
     var d = new Date(ts);
-    return (d.getMonth() + 1) + "月" + d.getDate() + "日";
+    var m = d.getMonth() + 1, dd = d.getDate();
+    return (m < 10 ? "0" : "") + m + "." + (dd < 10 ? "0" : "") + dd;
   }
   function renderLog(){
     logBox.innerHTML = "";
@@ -547,10 +771,10 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
 
   /* ---------- 测懒 ---------- */
   var TYPES = {
-    save:   { name: "战略性省电", text: "你不是懒。你在把电留给下一场必须赢的仗。这种人看起来不动，其实一直在算。" },
-    rest:   { name: "真的该睡了", text: "这次不是懒。你的身体在替你叫停，它比你有判断力。去睡，别硬撑。" },
-    process:{ name: "后台整理中", text: "你的大脑在归档。看起来像发呆，其实在把这一周的东西分类、压缩、丢掉没用的。整理完，你会突然想通一件事。" },
-    protest:{ name: "纯粹是抗议", text: "你在用「不动」对抗一件本来就不该落到你头上的事。这是合理的。先别动，让它急。" }
+    save:    { name: "战略性省电", text: "你不是懒。你在把电留给下一场必须赢的仗。这种人看起来不动，其实一直在算。" },
+    rest:    { name: "真的该睡了", text: "这次不是懒。你的身体在替你叫停，它比你有判断力。去睡，别硬撑。" },
+    process: { name: "后台整理中", text: "你的大脑在归档。看起来像发呆，其实在把这一周的东西分类、压缩、丢掉没用的。整理完，你会突然想通一件事。" },
+    protest: { name: "纯粹是抗议", text: "你在用「不动」对抗一件本来就不该落到你头上的事。这是合理的。先别动，让它急。" }
   };
   var QUIZ = [
     { q: "现在最想推掉的是什么？", opts: [
@@ -587,7 +811,11 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
       wrap.className = "q";
       var q = document.createElement("p");
       q.className = "qtext";
-      q.textContent = (qi + 1) + ". " + item.q;
+      var no = document.createElement("span");
+      no.className = "no";
+      no.textContent = "0" + (qi + 1);
+      q.appendChild(no);
+      q.appendChild(document.createTextNode(item.q));
       wrap.appendChild(q);
       var opts = document.createElement("div");
       opts.className = "opts";
@@ -619,10 +847,14 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
     });
     var t = TYPES[best];
     verdictBox.innerHTML = "";
+    var lb = document.createElement("div");
+    lb.className = "lb";
+    lb.textContent = "结论";
     var h = document.createElement("h3");
-    h.textContent = "结论：你属于「" + t.name + "」";
+    h.textContent = "你属于「" + t.name + "」";
     var p = document.createElement("p");
     p.textContent = t.text;
+    verdictBox.appendChild(lb);
     verdictBox.appendChild(h);
     verdictBox.appendChild(p);
     verdictBox.hidden = false;
@@ -636,6 +868,7 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
   var pill = document.getElementById("lockPill");
   if (left <= 0){
     pill.textContent = "已解锁";
+    pill.className = "pill on";
     var letter = document.createElement("div");
     letter.className = "letter";
     letter.innerHTML =
@@ -646,11 +879,14 @@ footer{display:flex;align-items:center;justify-content:space-between;gap:16px;pa
       "<div class=\"sign\">写于第 52 天</div>";
     body100.appendChild(letter);
   } else {
-    var p = document.createElement("p");
-    p.className = "desc";
-    p.style.marginBottom = "0";
-    p.textContent = "2026 年 12 月 16 日打开，会有一封信。还有 " + left + " 天。";
-    body100.appendChild(p);
+    var cd = document.createElement("div");
+    cd.className = "countdown";
+    cd.innerHTML = String(left) + '<span class="u">天</span>';
+    var until = document.createElement("div");
+    until.className = "until";
+    until.textContent = "解锁于 2026.12.16";
+    body100.appendChild(cd);
+    body100.appendChild(until);
   }
 
   /* ---------- 彩蛋 ---------- */
